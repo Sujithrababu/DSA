@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ELITE 2027 — Problem Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0b0f;
+    --surface: #111318;
+    --surface2: #181b22;
+    --border: #1e2230;
+    --border2: #262b3a;
+    --text: #e8eaf0;
+    --text2: #8b91a8;
+    --text3: #555d78;
+    --easy: #22d3a0;
+    --easy-bg: rgba(34,211,160,0.08);
+    --medium: #f59e0b;
+    --medium-bg: rgba(245,158,11,0.08);
+    --hard: #f43f5e;
+    --hard-bg: rgba(244,63,94,0.08);
+    --accent: #6366f1;
+    --accent2: #818cf8;
+    --done-bg: rgba(99,102,241,0.07);
+    --done-border: rgba(99,102,241,0.3);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* ── HEADER ── */
+  .hero {
+    background: linear-gradient(135deg, #0d0f18 0%, #111520 50%, #0a0b0f 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 2.5rem 2rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; left: -60px;
+    width: 320px; height: 320px;
+    background: radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; right: -40px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(34,211,160,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent2);
+    background: rgba(99,102,241,0.12);
+    border: 1px solid rgba(99,102,241,0.25);
+    border-radius: 4px;
+    padding: 3px 10px;
+    margin-bottom: 14px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .hero-tag::before { content: '◆'; font-size: 8px; }
+  .hero-title {
+    font-size: clamp(26px, 4vw, 44px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #e8eaf0 30%, #8b91a8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-sub {
+    font-size: 14px;
+    color: var(--text3);
+    font-family: 'Space Mono', monospace;
+    margin-bottom: 2rem;
+  }
+
+  /* ── STATS ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 0;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .stat-card.easy-stat::before { background: var(--easy); }
+  .stat-card.medium-stat::before { background: var(--medium); }
+  .stat-card.hard-stat::before { background: var(--hard); }
+  .stat-card.done-stat::before { background: var(--accent); }
+  .stat-num {
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 4px;
+    font-family: 'Space Mono', monospace;
+  }
+  .stat-card.easy-stat .stat-num { color: var(--easy); }
+  .stat-card.medium-stat .stat-num { color: var(--medium); }
+  .stat-card.hard-stat .stat-num { color: var(--hard); }
+  .stat-card.done-stat .stat-num { color: var(--accent2); }
+  .stat-label {
+    font-size: 11px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+  }
+  .stat-progress {
+    font-size: 11px;
+    color: var(--text3);
+    font-family: 'Space Mono', monospace;
+    margin-top: 2px;
+  }
+
+  /* ── MAIN ── */
+  .main {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  /* ── FILTERS ── */
+  .controls {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .filter-group {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .filter-btn {
+    padding: 7px 18px;
+    border-radius: 8px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    transition: all 0.15s;
+    letter-spacing: 0.02em;
+  }
+  .filter-btn:hover { border-color: var(--border2); color: var(--text); background: var(--surface2); }
+  .filter-btn.active-all { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .filter-btn.active-easy { background: var(--easy); border-color: var(--easy); color: #000; }
+  .filter-btn.active-medium { background: var(--medium); border-color: var(--medium); color: #000; }
+  .filter-btn.active-hard { background: var(--hard); border-color: var(--hard); color: #fff; }
+  .filter-btn.active-done { background: rgba(99,102,241,0.2); border-color: var(--accent); color: var(--accent2); }
+
+  .search-wrap { flex: 1; min-width: 200px; position: relative; }
+  .search-wrap::before {
+    content: '⌕';
+    position: absolute;
+    left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--text3);
+    font-size: 16px;
+    pointer-events: none;
+  }
+  .search {
+    width: 100%;
+    padding: 8px 12px 8px 34px;
+    border-radius: 8px;
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 13px;
+    font-family: 'Syne', sans-serif;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .search:focus { border-color: var(--accent); }
+  .search::placeholder { color: var(--text3); }
+  .platform-filter {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text2);
+    font-size: 13px;
+    font-family: 'Syne', sans-serif;
+    cursor: pointer;
+    outline: none;
+  }
+
+  .reset-btn {
+    padding: 7px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--hard);
+    background: rgba(244,63,94,0.08);
+    color: var(--hard);
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'Space Mono', monospace;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .reset-btn:hover { background: rgba(244,63,94,0.18); }
+
+  /* ── OVERALL PROGRESS BAR ── */
+  .progress-bar-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 1.5rem;
+  }
+  .progress-bar-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .progress-bar-label span:first-child {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .progress-bar-label span:last-child {
+    font-size: 13px;
+    font-family: 'Space Mono', monospace;
+    color: var(--accent2);
+  }
+  .progress-track {
+    height: 8px;
+    background: var(--surface2);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 100px;
+    background: linear-gradient(90deg, var(--accent) 0%, var(--easy) 100%);
+    transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  /* ── COUNT LABEL ── */
+  .count-label {
+    font-size: 12px;
+    color: var(--text3);
+    font-family: 'Space Mono', monospace;
+    margin-bottom: 1rem;
+  }
+
+  /* ── SECTIONS ── */
+  .section { margin-bottom: 2.5rem; }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .section-badge.easy { background: var(--easy-bg); color: var(--easy); border: 1px solid rgba(34,211,160,0.2); }
+  .section-badge.medium { background: var(--medium-bg); color: var(--medium); border: 1px solid rgba(245,158,11,0.2); }
+  .section-badge.hard { background: var(--hard-bg); color: var(--hard); border: 1px solid rgba(244,63,94,0.2); }
+  .section-count {
+    font-size: 13px;
+    color: var(--text3);
+    font-family: 'Space Mono', monospace;
+  }
+  .section-done-count {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--accent2);
+    font-family: 'Space Mono', monospace;
+    background: rgba(99,102,241,0.1);
+    border: 1px solid rgba(99,102,241,0.2);
+    padding: 3px 10px;
+    border-radius: 6px;
+  }
+
+  /* ── GRID ── */
+  .problem-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 10px;
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.18s cubic-bezier(0.4,0,0.2,1);
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+    border-radius: 3px 0 0 3px;
+    opacity: 0;
+    transition: opacity 0.18s;
+  }
+  .card.easy::before { background: var(--easy); }
+  .card.medium::before { background: var(--medium); }
+  .card.hard::before { background: var(--hard); }
+  .card:hover { border-color: var(--border2); transform: translateY(-1px); }
+  .card:hover::before { opacity: 1; }
+  .card.done {
+    background: var(--done-bg);
+    border-color: var(--done-border);
+  }
+  .card.done::before { opacity: 1; background: var(--accent); }
+  .card.done:hover { border-color: rgba(99,102,241,0.5); }
+
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  /* ── CHECKBOX ── */
+  .checkbox {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    border-radius: 6px;
+    border: 2px solid var(--border2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.18s;
+    background: transparent;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .card.done .checkbox {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .checkbox svg {
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.18s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .card.done .checkbox svg {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .problem-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.4;
+    flex: 1;
+    transition: color 0.15s;
+  }
+  .card.done .problem-name {
+    color: var(--text3);
+    text-decoration: line-through;
+    text-decoration-color: rgba(99,102,241,0.5);
+  }
+
+  /* ── CARD FOOTER ── */
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    flex: 1;
+  }
+  .platform-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.04em;
+    background: var(--surface2);
+    color: var(--text3);
+    border: 1px solid var(--border2);
+  }
+  .companies {
+    font-size: 10px;
+    color: var(--text3);
+    font-family: 'Space Mono', monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+  }
+  .solve-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text3);
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .solve-btn:hover {
+    background: var(--surface2);
+    color: var(--text);
+    border-color: var(--text3);
+  }
+  .card.done .solve-btn {
+    border-color: rgba(99,102,241,0.25);
+    color: var(--accent2);
+  }
+  .card.done .solve-btn:hover { background: rgba(99,102,241,0.1); }
+
+  /* ── NO RESULTS ── */
+  .no-results {
+    text-align: center;
+    padding: 4rem;
+    color: var(--text3);
+    font-size: 14px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  /* ── DONE CONFETTI FLASH ── */
+  @keyframes flash-done {
+    0% { box-shadow: 0 0 0 0 rgba(99,102,241,0.5); }
+    50% { box-shadow: 0 0 0 8px rgba(99,102,241,0); }
+    100% { box-shadow: 0 0 0 0 rgba(99,102,241,0); }
+  }
+  .card.flash { animation: flash-done 0.4s ease-out; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-tag">ELITE 2027 · Problem Tracker</div>
+    <h1 class="hero-title">DSA Mastery Board</h1>
+    <p class="hero-sub">172 problems · LeetCode, CodeChef, Codeforces &amp; HackerEarth</p>
+    <div class="stats-row">
+      <div class="stat-card easy-stat">
+        <div class="stat-num" id="c-easy">0</div>
+        <div class="stat-label">Easy</div>
+        <div class="stat-progress" id="p-easy">0 done</div>
+      </div>
+      <div class="stat-card medium-stat">
+        <div class="stat-num" id="c-medium">0</div>
+        <div class="stat-label">Medium</div>
+        <div class="stat-progress" id="p-medium">0 done</div>
+      </div>
+      <div class="stat-card hard-stat">
+        <div class="stat-num" id="c-hard">0</div>
+        <div class="stat-label">Hard</div>
+        <div class="stat-progress" id="p-hard">0 done</div>
+      </div>
+      <div class="stat-card done-stat">
+        <div class="stat-num" id="c-done">0</div>
+        <div class="stat-label">Completed</div>
+        <div class="stat-progress" id="p-pct">0% done</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-label">
+      <span>Overall Progress</span>
+      <span id="progress-text">0 / 172</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="filter-group">
+      <button class="filter-btn active-all" id="btn-all" onclick="setFilter('all')">All</button>
+      <button class="filter-btn" id="btn-easy" onclick="setFilter('easy')">Easy</button>
+      <button class="filter-btn" id="btn-medium" onclick="setFilter('medium')">Medium</button>
+      <button class="filter-btn" id="btn-hard" onclick="setFilter('hard')">Hard</button>
+      <button class="filter-btn" id="btn-done" onclick="setFilter('done')">✓ Done</button>
+    </div>
+    <div class="search-wrap">
+      <input class="search" type="text" placeholder="Search problems, companies…" id="search" oninput="render()">
+    </div>
+    <select class="platform-filter" id="plat" onchange="render()">
+      <option value="all">All Platforms</option>
+      <option value="Leetcode">LeetCode</option>
+      <option value="CodeChef">CodeChef</option>
+      <option value="Codeforces">Codeforces</option>
+      <option value="Hackerearth">HackerEarth</option>
+    </select>
+    <button class="reset-btn" onclick="resetProgress()">↺ Reset All</button>
+  </div>
+
+  <div class="count-label" id="count-label"></div>
+  <div id="container"></div>
+</div>
+
+<script>
+const problems = [
+  {n:"Two Sum",p:"Leetcode",u:"https://leetcode.com/problems/two-sum/",d:"easy",c:"Amazon, Google"},
+  {n:"Palindrome Number",p:"Leetcode",u:"https://leetcode.com/problems/palindrome-number/",d:"easy",c:"Amazon, Microsoft"},
+  {n:"Reverse Integer",p:"Leetcode",u:"https://leetcode.com/problems/reverse-integer/",d:"medium",c:"Amazon, Google"},
+  {n:"Valid Palindrome",p:"Leetcode",u:"https://leetcode.com/problems/valid-palindrome/",d:"easy",c:"Amazon, Meta"},
+  {n:"Fizz Buzz",p:"Leetcode",u:"https://leetcode.com/problems/fizz-buzz/",d:"easy",c:"Amazon, Google"},
+  {n:"Move Zeroes",p:"Leetcode",u:"https://leetcode.com/problems/move-zeroes/",d:"easy",c:"Amazon, Facebook"},
+  {n:"Plus One",p:"Leetcode",u:"https://leetcode.com/problems/plus-one/",d:"easy",c:"Amazon, Google"},
+  {n:"Contains Duplicate",p:"Leetcode",u:"https://leetcode.com/problems/contains-duplicate/",d:"easy",c:"Amazon, Palantir"},
+  {n:"Intersection of Two Arrays",p:"Leetcode",u:"https://leetcode.com/problems/intersection-of-two-arrays/",d:"easy",c:"Amazon, LinkedIn"},
+  {n:"Climbing Stairs",p:"Leetcode",u:"https://leetcode.com/problems/climbing-stairs/",d:"easy",c:"Amazon, Google"},
+  {n:"Longest Common Prefix",p:"Leetcode",u:"https://leetcode.com/problems/longest-common-prefix/",d:"easy",c:"Amazon, Google"},
+  {n:"Reverse Words in a String",p:"Leetcode",u:"https://leetcode.com/problems/reverse-words-in-a-string/",d:"medium",c:"Amazon, Microsoft"},
+  {n:"Implement strStr()",p:"Leetcode",u:"https://leetcode.com/problems/implement-strstr/",d:"easy",c:"Amazon, Google"},
+  {n:"Valid Parentheses",p:"Leetcode",u:"https://leetcode.com/problems/valid-parentheses/",d:"easy",c:"Amazon, Google"},
+  {n:"Length of Last Word",p:"Leetcode",u:"https://leetcode.com/problems/length-of-last-word/",d:"easy",c:"Amazon, Bloomberg"},
+  {n:"Merge Sorted Array",p:"Leetcode",u:"https://leetcode.com/problems/merge-sorted-array/",d:"easy",c:"Amazon, Facebook"},
+  {n:"Remove Duplicates from Sorted Array",p:"Leetcode",u:"https://leetcode.com/problems/remove-duplicates-from-sorted-array/",d:"easy",c:"Amazon, Microsoft"},
+  {n:"Best Time to Buy and Sell Stock",p:"Leetcode",u:"https://leetcode.com/problems/best-time-to-buy-and-sell-stock/",d:"easy",c:"Amazon, Bloomberg"},
+  {n:"Valid Anagram",p:"Leetcode",u:"https://leetcode.com/problems/valid-anagram/",d:"easy",c:"Amazon, Google"},
+  {n:"Ransom Note",p:"Leetcode",u:"https://leetcode.com/problems/ransom-note/",d:"easy",c:"Amazon, Google"},
+  {n:"Min Stack",p:"Leetcode",u:"https://leetcode.com/problems/min-stack/",d:"medium",c:"Amazon, Google"},
+  {n:"Implement Queue using Stacks",p:"Leetcode",u:"https://leetcode.com/problems/implement-queue-using-stacks/",d:"easy",c:"Amazon, Microsoft"},
+  {n:"Implement Stack using Queues",p:"Leetcode",u:"https://leetcode.com/problems/implement-stack-using-queues/",d:"easy",c:"Amazon, Google"},
+  {n:"Next Greater Element I",p:"Leetcode",u:"https://leetcode.com/problems/next-greater-element-i/",d:"easy",c:"Amazon, Google"},
+  {n:"Daily Temperatures",p:"Leetcode",u:"https://leetcode.com/problems/daily-temperatures/",d:"medium",c:"Amazon, Google"},
+  {n:"Linked List Cycle",p:"Leetcode",u:"https://leetcode.com/problems/linked-list-cycle/",d:"easy",c:"Amazon, Microsoft"},
+  {n:"Binary Search",p:"Leetcode",u:"https://leetcode.com/problems/binary-search/",d:"easy",c:"Amazon, Google"},
+  {n:"Find First and Last Position in Sorted Array",p:"Leetcode",u:"https://leetcode.com/problems/find-first-and-last-position-of-element-in-sorted-array/",d:"medium",c:"Amazon, Google"},
+  {n:"Find Peak Element",p:"Leetcode",u:"https://leetcode.com/problems/find-peak-element/",d:"medium",c:"Amazon, Google"},
+  {n:"Search in Rotated Sorted Array",p:"Leetcode",u:"https://leetcode.com/problems/search-in-rotated-sorted-array/",d:"medium",c:"Amazon, Facebook"},
+  {n:"Search Insert Position",p:"Leetcode",u:"https://leetcode.com/problems/search-insert-position/",d:"easy",c:"Amazon, Google"},
+  {n:"Sort Colors",p:"Leetcode",u:"https://leetcode.com/problems/sort-colors/",d:"medium",c:"Amazon, Microsoft"},
+  {n:"Height Checker",p:"Leetcode",u:"https://leetcode.com/problems/height-checker/",d:"easy",c:"Amazon, Google"},
+  {n:"Kth Largest Element in an Array",p:"Leetcode",u:"https://leetcode.com/problems/kth-largest-element-in-an-array/",d:"medium",c:"Amazon, Facebook"},
+  {n:"Reverse Linked List",p:"Leetcode",u:"https://leetcode.com/problems/reverse-linked-list/",d:"easy",c:"Amazon, Google"},
+  {n:"Middle of the Linked List",p:"Leetcode",u:"https://leetcode.com/problems/middle-of-the-linked-list/",d:"easy",c:"Amazon, Google"},
+  {n:"Remove Nth Node From End of List",p:"Leetcode",u:"https://leetcode.com/problems/remove-nth-node-from-end-of-list/",d:"medium",c:"Amazon, Google"},
+  {n:"Merge Two Sorted Lists",p:"Leetcode",u:"https://leetcode.com/problems/merge-two-sorted-lists/",d:"easy",c:"Amazon, Google"},
+  {n:"Palindrome Linked List",p:"Leetcode",u:"https://leetcode.com/problems/palindrome-linked-list/",d:"easy",c:"Amazon, Google"},
+  {n:"Intersection of Two Linked Lists",p:"Leetcode",u:"https://leetcode.com/problems/intersection-of-two-linked-lists/",d:"easy",c:"Amazon, Airbnb"},
+  {n:"Add Two Numbers",p:"Leetcode",u:"https://leetcode.com/problems/add-two-numbers/",d:"medium",c:"Amazon, Microsoft"},
+  {n:"Reorder List",p:"Leetcode",u:"https://leetcode.com/problems/reorder-list/",d:"medium",c:"Amazon, Google"},
+  {n:"Copy List with Random Pointer",p:"Leetcode",u:"https://leetcode.com/problems/copy-list-with-random-pointer/",d:"medium",c:"Amazon, Microsoft"},
+  {n:"Maximum Depth of Binary Tree",p:"Leetcode",u:"https://leetcode.com/problems/maximum-depth-of-binary-tree/",d:"easy",c:"Amazon, LinkedIn"},
+  {n:"Validate Binary Search Tree",p:"Leetcode",u:"https://leetcode.com/problems/validate-binary-search-tree/",d:"medium",c:"Amazon, Bloomberg"},
+  {n:"Symmetric Tree",p:"Leetcode",u:"https://leetcode.com/problems/symmetric-tree/",d:"easy",c:"Amazon, Microsoft"},
+  {n:"Path Sum",p:"Leetcode",u:"https://leetcode.com/problems/path-sum/",d:"easy",c:"Amazon, Microsoft"},
+  {n:"Lowest Common Ancestor of BST",p:"Leetcode",u:"https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-search-tree/",d:"medium",c:"Amazon, Facebook"},
+  {n:"Balanced Binary Tree",p:"Leetcode",u:"https://leetcode.com/problems/balanced-binary-tree/",d:"easy",c:"Amazon, Google"},
+  {n:"Convert Sorted Array to BST",p:"Leetcode",u:"https://leetcode.com/problems/convert-sorted-array-to-binary-search-tree/",d:"easy",c:"Amazon, Google"},
+  {n:"Diameter of Binary Tree",p:"Leetcode",u:"https://leetcode.com/problems/diameter-of-binary-tree/",d:"easy",c:"Amazon, Google"},
+  {n:"Binary Tree Inorder Traversal",p:"Leetcode",u:"https://leetcode.com/problems/binary-tree-inorder-traversal/",d:"easy",c:"Amazon, Microsoft"},
+  {n:"Binary Tree Level Order Traversal",p:"Leetcode",u:"https://leetcode.com/problems/binary-tree-level-order-traversal/",d:"medium",c:"Amazon, Facebook"},
+  {n:"Flood Fill",p:"Leetcode",u:"https://leetcode.com/problems/flood-fill/",d:"easy",c:"Amazon, Google"},
+  {n:"Number of Islands",p:"Leetcode",u:"https://leetcode.com/problems/number-of-islands/",d:"medium",c:"Amazon, Google"},
+  {n:"Clone Graph",p:"Leetcode",u:"https://leetcode.com/problems/clone-graph/",d:"medium",c:"Amazon, Facebook"},
+  {n:"Keys and Rooms",p:"Leetcode",u:"https://leetcode.com/problems/keys-and-rooms/",d:"medium",c:"Amazon, Google"},
+  {n:"Rotting Oranges",p:"Leetcode",u:"https://leetcode.com/problems/rotting-oranges/",d:"medium",c:"Amazon, Google"},
+  {n:"Course Schedule",p:"Leetcode",u:"https://leetcode.com/problems/course-schedule/",d:"medium",c:"Amazon, Google"},
+  {n:"Is Graph Bipartite?",p:"Leetcode",u:"https://leetcode.com/problems/is-graph-bipartite/",d:"medium",c:"Amazon, Google"},
+  {n:"Max Area of Island",p:"Leetcode",u:"https://leetcode.com/problems/max-area-of-island/",d:"medium",c:"Amazon, Google"},
+  {n:"All Paths From Source to Target",p:"Leetcode",u:"https://leetcode.com/problems/all-paths-from-source-to-target/",d:"medium",c:"Amazon, Google"},
+  {n:"Redundant Connection",p:"Leetcode",u:"https://leetcode.com/problems/redundant-connection/",d:"medium",c:"Amazon, Google"},
+  {n:"Find the Town Judge",p:"Leetcode",u:"https://leetcode.com/problems/find-the-town-judge/",d:"easy",c:"Amazon, Google"},
+  {n:"Find Eventual Safe States",p:"Leetcode",u:"https://leetcode.com/problems/find-eventual-safe-states/",d:"medium",c:"Google, Amazon"},
+  {n:"Course Schedule II",p:"Leetcode",u:"https://leetcode.com/problems/course-schedule-ii/",d:"medium",c:"Amazon, Google"},
+  {n:"Min Cost to Connect All Points",p:"Leetcode",u:"https://leetcode.com/problems/min-cost-to-connect-all-points/",d:"medium",c:"Amazon, Google"},
+  {n:"Network Delay Time",p:"Leetcode",u:"https://leetcode.com/problems/network-delay-time/",d:"medium",c:"Amazon, Google"},
+  {n:"Cheapest Flights Within K Stops",p:"Leetcode",u:"https://leetcode.com/problems/cheapest-flights-within-k-stops/",d:"medium",c:"Amazon, Uber"},
+  {n:"Shortest Path in Binary Matrix",p:"Leetcode",u:"https://leetcode.com/problems/shortest-path-in-binary-matrix/",d:"medium",c:"Amazon, Google"},
+  {n:"Path With Minimum Effort",p:"Leetcode",u:"https://leetcode.com/problems/path-with-minimum-effort/",d:"medium",c:"Google, Amazon"},
+  {n:"Longest Common Subsequence",p:"Leetcode",u:"https://leetcode.com/problems/longest-common-subsequence/",d:"medium",c:"Amazon, Google"},
+  {n:"Edit Distance",p:"Leetcode",u:"https://leetcode.com/problems/edit-distance/",d:"hard",c:"Amazon, Google"},
+  {n:"Find Minimum in Rotated Sorted Array",p:"Leetcode",u:"https://leetcode.com/problems/find-minimum-in-rotated-sorted-array/",d:"medium",c:"Amazon, Google"},
+  {n:"Search a 2D Matrix",p:"Leetcode",u:"https://leetcode.com/problems/search-a-2d-matrix/",d:"medium",c:"Amazon, Microsoft"},
+  {n:"Koko Eating Bananas",p:"Leetcode",u:"https://leetcode.com/problems/koko-eating-bananas/",d:"medium",c:"Amazon, Google"},
+  {n:"Sort an Array",p:"Leetcode",u:"https://leetcode.com/problems/sort-an-array/",d:"medium",c:"Amazon, Google"},
+  {n:"Count of Smaller Numbers After Self",p:"Leetcode",u:"https://leetcode.com/problems/count-of-smaller-numbers-after-self/",d:"hard",c:"Amazon, Google"},
+  {n:"Merge Intervals",p:"Leetcode",u:"https://leetcode.com/problems/merge-intervals/",d:"medium",c:"Amazon, Google"},
+  {n:"Insert Interval",p:"Leetcode",u:"https://leetcode.com/problems/insert-interval/",d:"medium",c:"Amazon, Google"},
+  {n:"Reverse Pairs",p:"Leetcode",u:"https://leetcode.com/problems/reverse-pairs/",d:"hard",c:"Amazon, Google"},
+  {n:"Top K Frequent Elements",p:"Leetcode",u:"https://leetcode.com/problems/top-k-frequent-elements/",d:"medium",c:"Amazon, Facebook"},
+  {n:"Task Scheduler",p:"Leetcode",u:"https://leetcode.com/problems/task-scheduler/",d:"medium",c:"Amazon, Facebook"},
+  {n:"Fibonacci Number",p:"Leetcode",u:"https://leetcode.com/problems/fibonacci-number/",d:"easy",c:"Amazon, Google"},
+  {n:"House Robber",p:"Leetcode",u:"https://leetcode.com/problems/house-robber/",d:"medium",c:"Amazon, Airbnb"},
+  {n:"Coin Change",p:"Leetcode",u:"https://leetcode.com/problems/coin-change/",d:"medium",c:"Amazon, Google"},
+  {n:"Min Cost Climbing Stairs",p:"Leetcode",u:"https://leetcode.com/problems/min-cost-climbing-stairs/",d:"easy",c:"Amazon, Google"},
+  {n:"Partition Equal Subset Sum",p:"Leetcode",u:"https://leetcode.com/problems/partition-equal-subset-sum/",d:"medium",c:"Amazon, Google"},
+  {n:"Target Sum",p:"Leetcode",u:"https://leetcode.com/problems/target-sum/",d:"medium",c:"Amazon, Facebook"},
+  {n:"Longest Palindromic Subsequence",p:"Leetcode",u:"https://leetcode.com/problems/longest-palindromic-subsequence/",d:"medium",c:"Amazon, Google"},
+  {n:"Maximum Subarray",p:"Leetcode",u:"https://leetcode.com/problems/maximum-subarray/",d:"medium",c:"Amazon, LinkedIn"},
+  {n:"Unique Paths",p:"Leetcode",u:"https://leetcode.com/problems/unique-paths/",d:"medium",c:"Amazon, Google"},
+  {n:"Minimum Path Sum",p:"Leetcode",u:"https://leetcode.com/problems/minimum-path-sum/",d:"medium",c:"Amazon, Google"},
+  {n:"Distinct Subsequences",p:"Leetcode",u:"https://leetcode.com/problems/distinct-subsequences/",d:"hard",c:"Amazon, Google"},
+  {n:"Interleaving String",p:"Leetcode",u:"https://leetcode.com/problems/interleaving-string/",d:"hard",c:"Amazon, Google"},
+  {n:"N-Queens",p:"Leetcode",u:"https://leetcode.com/problems/n-queens/",d:"hard",c:"Amazon, Google"},
+  {n:"Word Search",p:"Leetcode",u:"https://leetcode.com/problems/word-search/",d:"medium",c:"Amazon, Microsoft"},
+  {n:"Subsets",p:"Leetcode",u:"https://leetcode.com/problems/subsets/",d:"medium",c:"Amazon, Facebook"},
+  {n:"Permutations",p:"Leetcode",u:"https://leetcode.com/problems/permutations/",d:"medium",c:"Amazon, Microsoft"},
+  {n:"Combination Sum",p:"Leetcode",u:"https://leetcode.com/problems/combination-sum/",d:"medium",c:"Amazon, Google"},
+  {n:"Sudoku Solver",p:"Leetcode",u:"https://leetcode.com/problems/sudoku-solver/",d:"hard",c:"Amazon, Google"},
+  {n:"Letter Combinations of a Phone Number",p:"Leetcode",u:"https://leetcode.com/problems/letter-combinations-of-a-phone-number/",d:"medium",c:"Amazon, Google"},
+  {n:"Palindrome Partitioning",p:"Leetcode",u:"https://leetcode.com/problems/palindrome-partitioning/",d:"medium",c:"Amazon, Google"},
+  {n:"Combination Sum II",p:"Leetcode",u:"https://leetcode.com/problems/combination-sum-ii/",d:"medium",c:"Amazon, Google"},
+  {n:"Permutations II",p:"Leetcode",u:"https://leetcode.com/problems/permutations-ii/",d:"medium",c:"Amazon, Microsoft"},
+  {n:"Restore IP Addresses",p:"Leetcode",u:"https://leetcode.com/problems/restore-ip-addresses/",d:"medium",c:"Amazon, Google"},
+  {n:"Increasing Subsequences",p:"Leetcode",u:"https://leetcode.com/problems/increasing-subsequences/",d:"medium",c:"Amazon, Google"},
+  {n:"Generate Parentheses",p:"Leetcode",u:"https://leetcode.com/problems/generate-parentheses/",d:"medium",c:"Amazon, Google"},
+  {n:"Longest Palindromic Substring",p:"Leetcode",u:"https://leetcode.com/problems/longest-palindromic-substring/",d:"medium",c:"Amazon, Google"},
+  {n:"Repeated Substring Pattern",p:"Leetcode",u:"https://leetcode.com/problems/repeated-substring-pattern/",d:"easy",c:"Amazon, Google"},
+  {n:"Find All Anagrams in a String",p:"Leetcode",u:"https://leetcode.com/problems/find-all-anagrams-in-a-string/",d:"medium",c:"Amazon, Google"},
+  {n:"Sliding Window Maximum",p:"Leetcode",u:"https://leetcode.com/problems/sliding-window-maximum/",d:"hard",c:"Amazon, Google"},
+  {n:"Check If N and Its Double Exist",p:"Leetcode",u:"https://leetcode.com/problems/check-if-n-and-its-double-exist/",d:"easy",c:"Amazon, Bloomberg"},
+  {n:"How Many Numbers Are Smaller Than the Current Number",p:"Leetcode",u:"https://leetcode.com/problems/how-many-numbers-are-smaller-than-the-current-number/",d:"easy",c:"Google, Amazon"},
+  {n:"Lucky Numbers in a Matrix",p:"Leetcode",u:"https://leetcode.com/problems/lucky-numbers-in-a-matrix/",d:"easy",c:"Google, Amazon"},
+  {n:"Sum of Unique Elements",p:"Leetcode",u:"https://leetcode.com/problems/sum-of-unique-elements/",d:"easy",c:"Amazon, Google"},
+  {n:"Check if Array Is Sorted and Rotated",p:"Leetcode",u:"https://leetcode.com/problems/check-if-array-is-sorted-and-rotated/",d:"easy",c:"Google, Amazon"},
+  {n:"Three Consecutive Odds",p:"Leetcode",u:"https://leetcode.com/problems/three-consecutive-odds/",d:"easy",c:"Amazon, Bloomberg"},
+  {n:"Matrix Diagonal Sum",p:"Leetcode",u:"https://leetcode.com/problems/matrix-diagonal-sum/",d:"easy",c:"Amazon, Google"},
+  {n:"Richest Customer Wealth",p:"Leetcode",u:"https://leetcode.com/problems/richest-customer-wealth/",d:"easy",c:"Amazon, Meta"},
+  {n:"Defuse the Bomb",p:"Leetcode",u:"https://leetcode.com/problems/defuse-the-bomb/",d:"easy",c:"Amazon, Google"},
+  {n:"Minimum Deletions to Make String Balanced",p:"Leetcode",u:"https://leetcode.com/problems/minimum-deletions-to-make-string-balanced/",d:"medium",c:"Meta, Amazon"},
+  {n:"Minimum Length of String After Deleting Similar Ends",p:"Leetcode",u:"https://leetcode.com/problems/minimum-length-of-string-after-deleting-similar-ends/",d:"medium",c:"Amazon, Microsoft"},
+  {n:"Sum of Absolute Differences in a Sorted Array",p:"Leetcode",u:"https://leetcode.com/problems/sum-of-absolute-differences-in-a-sorted-array/",d:"medium",c:"Amazon, Microsoft"},
+  {n:"Minimum Possible Integer After K Adjacent Swaps",p:"Leetcode",u:"https://leetcode.com/problems/minimum-possible-integer-after-at-most-k-adjacent-swaps-on-digits/",d:"hard",c:"Amazon, Bloomberg"},
+  {n:"FLOW011 – Gross Salary",p:"CodeChef",u:"https://www.codechef.com/problems/FLOW011",d:"easy",c:"Infosys, Accenture"},
+  {n:"FLOW013 – Valid Triangles",p:"CodeChef",u:"https://www.codechef.com/problems/FLOW013",d:"easy",c:"TCS, Wipro"},
+  {n:"FLOW016 – GCD and LCM",p:"CodeChef",u:"https://www.codechef.com/problems/FLOW016",d:"easy",c:"Amazon, Microsoft"},
+  {n:"FLOW017 – Second Largest",p:"CodeChef",u:"https://www.codechef.com/problems/FLOW017",d:"easy",c:"TCS, Infosys"},
+  {n:"FLOW018 – Small Factorials",p:"CodeChef",u:"https://www.codechef.com/problems/FLOW018",d:"easy",c:"TCS, Wipro"},
+  {n:"FLOW005 – Smallest Numbers of Notes",p:"CodeChef",u:"https://www.codechef.com/problems/FLOW005",d:"easy",c:"TCS, Wipro"},
+  {n:"FLOW006 – Sum of Digits",p:"CodeChef",u:"https://www.codechef.com/problems/FLOW006",d:"easy",c:"Infosys, Wipro"},
+  {n:"FLOW007 – Reverse The Number",p:"CodeChef",u:"https://www.codechef.com/problems/FLOW007",d:"easy",c:"TCS, Wipro"},
+  {n:"FLOW008 – Helping Chef",p:"CodeChef",u:"https://www.codechef.com/problems/FLOW008",d:"easy",c:"Infosys, Accenture"},
+  {n:"START38D – Water Consumption",p:"CodeChef",u:"https://www.codechef.com/problems/WATERCONS",d:"easy",c:"TCS, Cognizant"},
+  {n:"START47C – Penalty Shots",p:"CodeChef",u:"https://www.codechef.com/problems/PENALTY",d:"easy",c:"Accenture, Wipro"},
+  {n:"START65 – Remove Bad Elements",p:"CodeChef",u:"https://www.codechef.com/problems/REMOVEBAD",d:"easy",c:"Infosys, Accenture"},
+  {n:"START72C – Coins",p:"CodeChef",u:"https://www.codechef.com/problems/EXACTLYNPLUS1",d:"easy",c:"TCS, Cognizant"},
+  {n:"START59D – Fit in Data",p:"CodeChef",u:"https://www.codechef.com/problems/FITINDATA",d:"medium",c:"Infosys, TCS"},
+  {n:"START85 – Sugarcane Juice Business",p:"CodeChef",u:"https://www.codechef.com/problems/SC31",d:"medium",c:"Infosys, TCS"},
+  {n:"START92 – Donation Drive",p:"CodeChef",u:"https://www.codechef.com/problems/DONDRIVE",d:"medium",c:"TCS, Accenture"},
+  {n:"734A – Anton and Danik",p:"Codeforces",u:"https://codeforces.com/problemset/problem/734/A",d:"easy",c:"TCS, Wipro"},
+  {n:"281A – Word Capitalization",p:"Codeforces",u:"https://codeforces.com/problemset/problem/281/A",d:"easy",c:"Infosys, Cognizant"},
+  {n:"677A – Vanya and Fence",p:"Codeforces",u:"https://codeforces.com/problemset/problem/677/A",d:"easy",c:"TCS, Infosys"},
+  {n:"268A – Games",p:"Codeforces",u:"https://codeforces.com/problemset/problem/268/A",d:"easy",c:"Infosys, Wipro"},
+  {n:"703A – Mishka and Game",p:"Codeforces",u:"https://codeforces.com/problemset/problem/703/A",d:"easy",c:"Infosys, Wipro"},
+  {n:"344A – Magnets",p:"Codeforces",u:"https://codeforces.com/problemset/problem/344/A",d:"easy",c:"TCS, Infosys"},
+  {n:"59A – Word",p:"Codeforces",u:"https://codeforces.com/problemset/problem/59/A",d:"easy",c:"Infosys, Cognizant"},
+  {n:"133A – HQ9+",p:"Codeforces",u:"https://codeforces.com/problemset/problem/133/A",d:"easy",c:"TCS, Wipro"},
+  {n:"271A – Beautiful Year",p:"Codeforces",u:"https://codeforces.com/problemset/problem/271/A",d:"easy",c:"TCS, Infosys"},
+  {n:"122A – Lucky Division",p:"Codeforces",u:"https://codeforces.com/problemset/problem/122/A",d:"easy",c:"TCS, Wipro"},
+  {n:"339B – Xenia and Ringroad",p:"Codeforces",u:"https://codeforces.com/problemset/problem/339/B",d:"medium",c:"Infosys, Accenture"},
+  {n:"405A – Gravity Flip",p:"Codeforces",u:"https://codeforces.com/problemset/problem/405/A",d:"easy",c:"TCS, Wipro"},
+  {n:"344B – Simple Molecules",p:"Codeforces",u:"https://codeforces.com/problemset/problem/344/B",d:"medium",c:"Infosys, Cognizant"},
+  {n:"467A – George and Accommodation",p:"Codeforces",u:"https://codeforces.com/problemset/problem/467/A",d:"easy",c:"TCS, Wipro"},
+  {n:"158A – Next Round",p:"Codeforces",u:"https://codeforces.com/problemset/problem/158/A",d:"easy",c:"TCS, Wipro"},
+  {n:"339A – Helpful Maths",p:"Codeforces",u:"https://codeforces.com/problemset/problem/339/A",d:"easy",c:"TCS, Wipro"},
+  {n:"158B – Taxi",p:"Codeforces",u:"https://codeforces.com/problemset/problem/158/B",d:"medium",c:"Amazon"},
+  {n:"1352A – Sum of Round Numbers",p:"Codeforces",u:"https://codeforces.com/problemset/problem/1352/A",d:"easy",c:"Amazon"},
+  {n:"Roy and Profile Picture",p:"Hackerearth",u:"https://www.hackerearth.com/practice/basic-programming/input-output/basics-of-input-output/practice-problems/algorithm/roy-and-profile-picture/",d:"easy",c:"TCS, Infosys"},
+  {n:"Palindromic String",p:"Hackerearth",u:"https://www.hackerearth.com/practice/basic-programming/input-output/basics-of-input-output/practice-problems/algorithm/palindromic-strings-1/",d:"easy",c:"Wipro, Accenture"},
+  {n:"Toggle Case",p:"Hackerearth",u:"https://www.hackerearth.com/practice/basic-programming/input-output/basics-of-input-output/practice-problems/algorithm/toggle-case/",d:"easy",c:"Infosys, Cognizant"},
+  {n:"Count Divisors",p:"Hackerearth",u:"https://www.hackerearth.com/practice/basic-programming/input-output/basics-of-input-output/practice-problems/algorithm/count-divisors/",d:"easy",c:"TCS, Wipro"},
+  {n:"Reverse String",p:"Hackerearth",u:"https://www.hackerearth.com/problem/algorithm/reverse-string-23/",d:"easy",c:"Amazon, Microsoft"},
+  {n:"Prime Numbers",p:"Hackerearth",u:"https://www.hackerearth.com/problem/algorithm/prime-number-8/",d:"easy",c:"TCS, Infosys"},
+  {n:"Anagrams",p:"Hackerearth",u:"https://www.hackerearth.com/problem/algorithm/anagrams-651/",d:"easy",c:"Amazon, Adobe"},
+  {n:"Two Strings",p:"Hackerearth",u:"https://www.hackerearth.com/problem/algorithm/two-strings-10/",d:"medium",c:"Infosys, Accenture"},
+  {n:"Best Index",p:"Hackerearth",u:"https://www.hackerearth.com/problem/algorithm/the-best-index-1/",d:"medium",c:"Amazon, Microsoft"},
+  {n:"Mind Palaces",p:"Hackerearth",u:"https://www.hackerearth.com/problem/algorithm/mind-palaces-2/",d:"medium",c:"Cognizant, Infosys"},
+  {n:"Find Product",p:"Hackerearth",u:"https://www.hackerearth.com/problem/algorithm/find-product/",d:"medium",c:"TCS, Wipro"},
+  {n:"Book of Potion Making",p:"Hackerearth",u:"https://www.hackerearth.com/problem/algorithm/book-of-potion-making/",d:"hard",c:"Infosys, Wipro"},
+  {n:"Lift Queries",p:"Hackerearth",u:"https://www.hackerearth.com/problem/algorithm/lift-queries-3/",d:"hard",c:"TCS, Infosys"},
+];
+
+// ── STATE ──
+const STORAGE_KEY = 'elite2027_done';
+let done = new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'));
+let currentFilter = 'all';
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify([...done]));
+}
+
+function toggle(idx, cardEl) {
+  if (done.has(idx)) {
+    done.delete(idx);
+    cardEl.classList.remove('done');
+  } else {
+    done.add(idx);
+    cardEl.classList.add('done');
+    cardEl.classList.add('flash');
+    setTimeout(() => cardEl.classList.remove('flash'), 500);
+  }
+  save();
+  updateStats();
+  if (currentFilter === 'done') render();
+}
+
+function updateStats() {
+  const easyProbs = problems.filter(p => p.d === 'easy');
+  const medProbs = problems.filter(p => p.d === 'medium');
+  const hardProbs = problems.filter(p => p.d === 'hard');
+
+  const doneEasy = easyProbs.filter((_, i) => done.has(problems.indexOf(easyProbs[i]))).length;
+  const doneMed = medProbs.filter((_, i) => done.has(problems.indexOf(medProbs[i]))).length;
+  const doneHard = hardProbs.filter((_, i) => done.has(problems.indexOf(hardProbs[i]))).length;
+
+  // Recalculate counts properly
+  let doneEasyCount = 0, doneMedCount = 0, doneHardCount = 0;
+  problems.forEach((p, i) => {
+    if (done.has(i)) {
+      if (p.d === 'easy') doneEasyCount++;
+      else if (p.d === 'medium') doneMedCount++;
+      else if (p.d === 'hard') doneHardCount++;
+    }
+  });
+
+  document.getElementById('c-easy').textContent = easyProbs.length;
+  document.getElementById('c-medium').textContent = medProbs.length;
+  document.getElementById('c-hard').textContent = hardProbs.length;
+  document.getElementById('c-done').textContent = done.size;
+
+  document.getElementById('p-easy').textContent = `${doneEasyCount} done`;
+  document.getElementById('p-medium').textContent = `${doneMedCount} done`;
+  document.getElementById('p-hard').textContent = `${doneHardCount} done`;
+
+  const pct = Math.round((done.size / problems.length) * 100);
+  document.getElementById('p-pct').textContent = `${pct}% done`;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-text').textContent = `${done.size} / ${problems.length}`;
+}
+
+function setFilter(f) {
+  currentFilter = f;
+  ['all','easy','medium','hard','done'].forEach(id => {
+    const btn = document.getElementById('btn-' + id);
+    btn.className = 'filter-btn';
+  });
+  const btn = document.getElementById('btn-' + f);
+  btn.className = 'filter-btn active-' + f;
+  render();
+}
+
+function resetProgress() {
+  if (!confirm('Reset all progress? This cannot be undone.')) return;
+  done.clear();
+  save();
+  updateStats();
+  render();
+}
+
+function render() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const plat = document.getElementById('plat').value;
+
+  let filtered = problems.map((p, i) => ({...p, idx: i})).filter(p => {
+    if (currentFilter === 'done' && !done.has(p.idx)) return false;
+    if (currentFilter !== 'all' && currentFilter !== 'done' && p.d !== currentFilter) return false;
+    if (plat !== 'all' && p.p !== plat) return false;
+    if (q && !p.n.toLowerCase().includes(q) && !p.c.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  document.getElementById('count-label').textContent =
+    `Showing ${filtered.length} of ${problems.length} problems`;
+
+  let html = '';
+  if (filtered.length === 0) {
+    html = '<div class="no-results">// No problems match your filters.</div>';
+  } else {
+    const order = ['easy', 'medium', 'hard'];
+    for (const diff of order) {
+      const items = filtered.filter(p => p.d === diff);
+      if (!items.length) continue;
+      if (currentFilter !== 'all' && currentFilter !== 'done' && currentFilter !== diff) continue;
+
+      const doneCount = items.filter(p => done.has(p.idx)).length;
+      html += `<div class="section">
+        <div class="section-header">
+          <span class="section-badge ${diff}">${diff.charAt(0).toUpperCase()+diff.slice(1)}</span>
+          <span class="section-count">${items.length} problems</span>
+          <span class="section-done-count">✓ ${doneCount} / ${items.length}</span>
+        </div>
+        <div class="problem-grid">`;
+
+      for (const p of items) {
+        const isDone = done.has(p.idx);
+        html += `<div class="card ${p.d}${isDone ? ' done' : ''}" onclick="toggle(${p.idx}, this)">
+          <div class="card-top">
+            <div class="checkbox">
+              <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
+                <path d="M1 4L4 7.5L10 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="problem-name">${p.n}</div>
+          </div>
+          <div class="card-footer">
+            <div class="card-meta">
+              <span class="platform-badge">${p.p}</span>
+              <span class="companies">${p.c}</span>
+            </div>
+            <a class="solve-btn" href="${p.u}" target="_blank" onclick="event.stopPropagation()">
+              Solve ↗
+            </a>
+          </div>
+        </div>`;
+      }
+      html += `</div></div>`;
+    }
+  }
+
+  document.getElementById('container').innerHTML = html;
+}
+
+updateStats();
+render();
+</script>
+</body>
+</html>
