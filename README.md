@@ -1,4 +1,4 @@
-# 🚀 ELITE 2027 — DSA Problem Tracker
+# 🚀 2027 — DSA Problem Tracker
 
 ## 📌 Overview
 
